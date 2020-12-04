@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t andystyles30/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true andystyles30/react-test npm test # "npm run test && npm run lint"
+
+after_success:
+  - docker build -t andystyles30/multi-client -f ./client
+  - docker build -t andystyles30/multi-nginx -f ./nginx
+  - docker build -t andystyles30/multi-server -f ./server
+  - docker build -t andystyles30/multi-worker -f ./worker
+  # log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push andystyles30/multi-client
+  - docker push andystyles30/multi-nginx
+  - docker push andystyles30/multi-server
+  - docker push andystyles30/multi-worker
